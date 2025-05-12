@@ -10,7 +10,6 @@ import pers.nefedov.subscriptions.dto.UserCreationDto;
 import pers.nefedov.subscriptions.dto.UserDto;
 import pers.nefedov.subscriptions.dto.UserSubscriptionDto;
 import pers.nefedov.subscriptions.entity.User;
-import pers.nefedov.subscriptions.entity.UserSubscription;
 import pers.nefedov.subscriptions.exception.ConflictException;
 import pers.nefedov.subscriptions.repo.UserRepository;
 
@@ -130,12 +129,6 @@ public class UserServiceImpl implements UserService {
         } finally {
             MDC.remove("userId");
         }
-    }
-
-    private void updateEntity(UserCreationDto dto, User user) {
-        user.setEmail(dto.getEmail());
-        user.setName(dto.getName());
-
     }
 
     private static UserDto mapToUserDto(User savedUser) {

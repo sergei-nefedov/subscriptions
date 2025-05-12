@@ -26,6 +26,4 @@ public class Subscription {
 
     @OneToMany(mappedBy = "subscription")
     private List<UserSubscription> userSubscriptions;
-
-    //TODO subscibersAmount?
 }

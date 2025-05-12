@@ -9,7 +9,6 @@ import pers.nefedov.subscriptions.entity.Subscription;
 import pers.nefedov.subscriptions.exception.DataRetrievalException;
 import pers.nefedov.subscriptions.repo.SubscriptionRepository;
 
-import java.util.Arrays;
 import java.util.List;
 
 @Service
