@@ -60,7 +60,7 @@ public class UserSubscriptionServiceImpl implements UserSubscriptionService {
             userSubscription.setSubscription(subscription);
             userSubscription.setSubscribedAt(LocalDateTime.now());
 
-            UserSubscription saved = userSubscriptionRepository.save(userSubscription);
+            UserSubscription saved = userSubscriptionRepository.saveAndFlush(userSubscription);
             log.debug("Subscription added: {}", saved);
 
             user.getSubscriptions().add(saved);

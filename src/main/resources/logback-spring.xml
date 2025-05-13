@@ -10,16 +10,29 @@
             <customFields>{"service":"${appName}", "env":"${spring.profiles.active:-dev}"}</customFields>
             <includeContext>false</includeContext>
             <includeMdc>true</includeMdc>
-            <includeMdcKeyName>traceId</includeMdcKeyName>
             <fieldNames>
                 <timestamp>time</timestamp>
             </fieldNames>
             <pattern>%message%n</pattern>
         </encoder>
     </appender>
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>application.log</file>
+        <encoder>
+            <includeMdc>true</includeMdc>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%X{traceId}] [%X{userId}] [%X{operation}] [%X{subscriptionId}]
+                %-5level %logger{36}
+                - %msg%n</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>./logs/app-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>10MB</maxFileSize>
+        </rollingPolicy>
+    </appender>
 
     <root level="INFO">
         <appender-ref ref="JSON"/>
+        <appender-ref ref="FILE"/>
     </root>
 
     <logger name="pers.nefedov.subscriptions" level="DEBUG"/>
