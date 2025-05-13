@@ -12,7 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import pers.nefedov.subscriptions.dto.AddSubscriptionRequest;
+import pers.nefedov.subscriptions.dto.AddSubscriptionDto;
 import pers.nefedov.subscriptions.dto.UserSubscriptionDto;
 import pers.nefedov.subscriptions.service.UserSubscriptionService;
 
@@ -28,7 +28,7 @@ public class UserSubscriptionController {
 
     @PostMapping
     @Operation(summary = "Добавление подписки пользователю", description = "Добавляет подписку пользователю по его ID. ID подписки передается в теле запроса")
-    public ResponseEntity<UserSubscriptionDto> addSubscription(@PathVariable @Schema(description = "ID " + "пользователя", example = "1") @NotNull @Min(1) Long userId, @Valid @RequestBody AddSubscriptionRequest request) {
+    public ResponseEntity<UserSubscriptionDto> addSubscription(@PathVariable @Schema(description = "ID " + "пользователя", example = "1") @NotNull @Min(1) Long userId, @Valid @RequestBody AddSubscriptionDto request) {
 
         UserSubscriptionDto dto = userSubscriptionService.addSubscriptionToUser(userId, request.getSubscriptionId());
 

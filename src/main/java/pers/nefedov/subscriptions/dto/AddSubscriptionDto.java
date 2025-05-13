@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 
 @Getter
-public class AddSubscriptionRequest {
+public class AddSubscriptionDto {
     @NotNull
     @Min(1)
     @Schema(description = "ID подписки", example = "1")

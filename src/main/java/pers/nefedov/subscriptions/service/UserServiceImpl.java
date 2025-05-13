@@ -44,18 +44,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserDto getUser(Long id) {
+        public UserDto getUser(Long id) {
         MDC.put("userId", String.valueOf(id));
         try {
             log.debug("Fetching user by id: {}", id);
-
-            return userRepository.findById(id).map(user -> {
-                log.debug("User found: {}", user.getEmail());
-                return userMapper.mapToUserDto(user);
-            }).orElseThrow(() -> {
-                log.warn("User not found: id={}", id);
-                return new EntityNotFoundException("User not found");
-            });
+            User user = getUserOrThrow(id);
+            log.debug("User found: {}", user.getEmail());
+            return userMapper.mapToUserDto(user);
         } finally {
             MDC.remove("userId");
         }
@@ -68,16 +63,10 @@ public class UserServiceImpl implements UserService {
         MDC.put("operation", "updateUser");
         try {
             log.info("Updating user ID: {}, new email: {}", id, maskEmail(dto.getEmail()));
-
-            User user = userRepository.findById(id).orElseThrow(() -> {
-                log.error("Update failed - user not found: ID={}", id);
-                return new EntityNotFoundException("User not found");
-            });
-
+            User user = getUserOrThrow(id);
             user.setEmail(dto.getEmail());
             user.setName(dto.getName());
             User updatedUser = userRepository.saveAndFlush(user);
-
             log.debug("User updated successfully: {}", updatedUser);
             return userMapper.mapToUserDto(updatedUser);
         } finally {
@@ -93,13 +82,7 @@ public class UserServiceImpl implements UserService {
         MDC.put("userId", String.valueOf(id));
         try {
             log.warn("Initiating user deletion: ID={}", id);
-
-            User user = userRepository.findById(id).orElseThrow(() -> {
-                log.error("User not found for deletion: ID={}", id);
-                return new EntityNotFoundException("User not found");
-            });
-
-
+            User user = getUserOrThrow(id);
             List<UserSubscriptionDto> subscriptions = userSubscriptionService.getSubscriptions(user.getId());
             log.debug("Found {} subscriptions to remove", subscriptions.size());
 
@@ -121,6 +104,13 @@ public class UserServiceImpl implements UserService {
         } finally {
             MDC.remove("userId");
         }
+    }
+
+    private User getUserOrThrow(Long userId) {
+        return userRepository.findById(userId).orElseThrow(() -> {
+            log.error("User not found: userId={}", userId);
+            return new EntityNotFoundException("User not found");
+        });
     }
 
     private String maskEmail(String email) {

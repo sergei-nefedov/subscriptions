@@ -31,38 +31,24 @@ public class UserSubscriptionServiceImpl implements UserSubscriptionService {
 
     @Override
     public UserSubscriptionDto addSubscriptionToUser(Long userId, Long subscriptionId) {
-        MDC.put("userId", ""+ userId);
-        MDC.put("subscriptionId", ""+ subscriptionId);
+        MDC.put("userId", "" + userId);
+        MDC.put("subscriptionId", "" + subscriptionId);
         MDC.put("operation", "addSubscription");
 
         try {
             log.info("Attempting to add subscription to user");
-
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> {
-                        log.error("User not found: userId={}", userId);
-                        return new EntityNotFoundException("User not found");
-                    });
-
-            Subscription subscription = subscriptionRepository.findById(subscriptionId)
-                    .orElseThrow(() -> {
-                        log.error("Subscription not found: subscriptionId={}", subscriptionId);
-                        return new EntityNotFoundException("Subscription not found");
-                    });
+            User user = getUserOrThrow(userId);
+            Subscription subscription = getSubscriptionOrThrow(subscriptionId);
 
             if (userSubscriptionRepository.existsByUserAndSubscription(user, subscription)) {
                 log.warn("Subscription already exists for user: userId={}, subscriptionId={}", userId, subscriptionId);
                 throw new IllegalStateException("User already has this subscription");
             }
-
             UserSubscription userSubscription = userSubscriptionMapper.toUserSubscription(user, subscription);
-
             UserSubscription saved = userSubscriptionRepository.saveAndFlush(userSubscription);
             log.debug("Subscription added: {}", saved);
-
             user.getSubscriptions().add(saved);
             subscription.getUserSubscriptions().add(saved);
-
             log.info("Successfully added subscription to user");
             return userSubscriptionMapper.toUserSubscriptionDto(saved);
         } finally {
@@ -76,11 +62,7 @@ public class UserSubscriptionServiceImpl implements UserSubscriptionService {
     public List<UserSubscriptionDto> getSubscriptions(Long userId) {
         MDC.put("userId", userId.toString());
         MDC.put("operation", "getSubscriptions");
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> {
-                    log.error("User not found: userId={}", userId);
-                    return new EntityNotFoundException("User not found");
-                });
+        getUserOrThrow(userId);
         try {
             log.debug("Fetching subscriptions for user");
             List<UserSubscription> result = userSubscriptionRepository.getAllByUser_Id(userId);
@@ -101,21 +83,9 @@ public class UserSubscriptionServiceImpl implements UserSubscriptionService {
 
         try {
             log.info("Attempting to delete subscription: subscriptionId={}", subId);
-
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> {
-                        log.error("User not found: userId={}", userId);
-                        return new EntityNotFoundException("User not found");
-                    });
-
-            Subscription subscription = subscriptionRepository.findById(subId)
-                    .orElseThrow(() -> {
-                        log.error("Subscription not found: subscriptionId={}", subId);
-                        return new EntityNotFoundException("Subscription not found");
-                    });
-
+            User user = getUserOrThrow(userId);
+            Subscription subscription = getSubscriptionOrThrow(subId);
             UserSubscription deletingSub = userSubscriptionRepository.findByUserAndSubscription(user, subscription);
-
             user.getSubscriptions().remove(deletingSub);
             subscription.getUserSubscriptions().remove(deletingSub);
             userSubscriptionRepository.deleteById(new UserSubscriptionId(userId, subId));
@@ -126,5 +96,19 @@ public class UserSubscriptionServiceImpl implements UserSubscriptionService {
             MDC.remove("subscriptionId");
             MDC.remove("operation");
         }
+    }
+
+    private User getUserOrThrow(Long userId) {
+        return userRepository.findById(userId).orElseThrow(() -> {
+            log.error("User not found: userId={}", userId);
+            return new EntityNotFoundException("User not found");
+        });
+    }
+
+    private Subscription getSubscriptionOrThrow(Long subscriptionId) {
+        return subscriptionRepository.findById(subscriptionId).orElseThrow(() -> {
+            log.error("Subscription not found: subscriptionId={}", subscriptionId);
+            return new EntityNotFoundException("Subscription not found");
+        });
     }
 }
