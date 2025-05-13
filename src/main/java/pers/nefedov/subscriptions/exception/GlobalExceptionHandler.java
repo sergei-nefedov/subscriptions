@@ -75,6 +75,16 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
     }
 
+    @ExceptionHandler(IllegalStateException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    private ResponseEntity<ErrorResponse> handleException(IllegalStateException exception) {
+        ErrorResponse errorResponse = new ErrorResponse();
+        errorResponse.setTraceId(MDC.get("traceId"));
+        errorResponse.setMessage(exception.getMessage());
+        log.error("Request failed: traceId={}", MDC.get("traceId"), exception);
+        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     private List<ErrorResponse> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
