@@ -11,11 +11,11 @@ import pers.nefedov.subscriptions.entity.Subscription;
 import pers.nefedov.subscriptions.entity.User;
 import pers.nefedov.subscriptions.entity.UserSubscription;
 import pers.nefedov.subscriptions.entity.UserSubscriptionId;
+import pers.nefedov.subscriptions.mapper.UserSubscriptionMapper;
 import pers.nefedov.subscriptions.repo.SubscriptionRepository;
 import pers.nefedov.subscriptions.repo.UserRepository;
 import pers.nefedov.subscriptions.repo.UserSubscriptionRepository;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,6 +27,7 @@ public class UserSubscriptionServiceImpl implements UserSubscriptionService {
     private final UserRepository userRepository;
     private final SubscriptionRepository subscriptionRepository;
     private final UserSubscriptionRepository userSubscriptionRepository;
+    private final UserSubscriptionMapper userSubscriptionMapper;
 
     @Override
     public UserSubscriptionDto addSubscriptionToUser(Long userId, Long subscriptionId) {
@@ -54,11 +55,7 @@ public class UserSubscriptionServiceImpl implements UserSubscriptionService {
                 throw new IllegalStateException("User already has this subscription");
             }
 
-            UserSubscription userSubscription = new UserSubscription();
-            userSubscription.setId(new UserSubscriptionId(userId, subscriptionId));
-            userSubscription.setUser(user);
-            userSubscription.setSubscription(subscription);
-            userSubscription.setSubscribedAt(LocalDateTime.now());
+            UserSubscription userSubscription = userSubscriptionMapper.toUserSubscription(user, subscription);
 
             UserSubscription saved = userSubscriptionRepository.saveAndFlush(userSubscription);
             log.debug("Subscription added: {}", saved);
@@ -67,7 +64,7 @@ public class UserSubscriptionServiceImpl implements UserSubscriptionService {
             subscription.getUserSubscriptions().add(saved);
 
             log.info("Successfully added subscription to user");
-            return toDto(saved);
+            return userSubscriptionMapper.toUserSubscriptionDto(saved);
         } finally {
             MDC.remove("userId");
             MDC.remove("subscriptionId");
@@ -84,7 +81,7 @@ public class UserSubscriptionServiceImpl implements UserSubscriptionService {
             log.debug("Fetching subscriptions for user");
             List<UserSubscription> result = userSubscriptionRepository.getAllByUser_Id(userId);
             log.debug("Found {} subscriptions for user", result.size());
-            return result.stream().map(this::toDto).collect(Collectors.toList());
+            return result.stream().map(userSubscriptionMapper::toUserSubscriptionDto).collect(Collectors.toList());
         } finally {
             MDC.remove("userId");
             MDC.remove("operation");
@@ -125,13 +122,5 @@ public class UserSubscriptionServiceImpl implements UserSubscriptionService {
             MDC.remove("subscriptionId");
             MDC.remove("operation");
         }
-    }
-
-    private UserSubscriptionDto toDto(UserSubscription userSubscription) {
-        return new UserSubscriptionDto(
-                userSubscription.getId().getUserId(),
-                userSubscription.getId().getSubscriptionId(),
-                userSubscription.getSubscribedAt()
-        );
     }
 }
