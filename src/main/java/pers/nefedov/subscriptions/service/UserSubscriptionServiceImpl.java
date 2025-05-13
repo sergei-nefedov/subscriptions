@@ -31,8 +31,8 @@ public class UserSubscriptionServiceImpl implements UserSubscriptionService {
 
     @Override
     public UserSubscriptionDto addSubscriptionToUser(Long userId, Long subscriptionId) {
-        MDC.put("userId", userId.toString());
-        MDC.put("subscriptionId", subscriptionId.toString());
+        MDC.put("userId", ""+ userId);
+        MDC.put("subscriptionId", ""+ subscriptionId);
         MDC.put("operation", "addSubscription");
 
         try {
@@ -76,7 +76,11 @@ public class UserSubscriptionServiceImpl implements UserSubscriptionService {
     public List<UserSubscriptionDto> getSubscriptions(Long userId) {
         MDC.put("userId", userId.toString());
         MDC.put("operation", "getSubscriptions");
-
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> {
+                    log.error("User not found: userId={}", userId);
+                    return new EntityNotFoundException("User not found");
+                });
         try {
             log.debug("Fetching subscriptions for user");
             List<UserSubscription> result = userSubscriptionRepository.getAllByUser_Id(userId);

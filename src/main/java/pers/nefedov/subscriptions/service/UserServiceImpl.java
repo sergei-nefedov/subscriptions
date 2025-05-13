@@ -44,7 +44,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserDto getUser(long id) {
+    public UserDto getUser(Long id) {
         MDC.put("userId", String.valueOf(id));
         try {
             log.debug("Fetching user by id: {}", id);
@@ -63,7 +63,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserDto updateUser(long id, UserCreationDto dto) {
+    public UserDto updateUser(Long id, UserCreationDto dto) {
         MDC.put("userId", String.valueOf(id));
         MDC.put("operation", "updateUser");
         try {
@@ -89,7 +89,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
 
-    public void deleteUser(long id) {
+    public void deleteUser(Long id) {
         MDC.put("userId", String.valueOf(id));
         try {
             log.warn("Initiating user deletion: ID={}", id);

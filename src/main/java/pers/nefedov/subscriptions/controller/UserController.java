@@ -36,14 +36,15 @@ public class UserController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Получение информации о пользователе", description = "Возвращает данные пользователя по его ID", responses = {@ApiResponse(responseCode = "200", description = "User found", content = @Content(schema = @Schema(implementation = UserDto.class))), @ApiResponse(responseCode = "404", description = "User not found", content = @Content(schema = @Schema(implementation = GlobalExceptionHandler.ErrorResponse.class))), @ApiResponse(responseCode = "400", description = "Invalid ID supplied", content = @Content(schema = @Schema(implementation = GlobalExceptionHandler.ErrorResponse.class)))})
-    public ResponseEntity<UserDto> getUser(@PathVariable @NotNull @Min(1) @Schema(description = "ID пользователя", example = "1") long id) {
+    public ResponseEntity<UserDto> getUser(@PathVariable @NotNull @Min(1) @Schema(description = "ID пользователя",
+            example = "1") Long id) {
         UserDto userDto = userService.getUser(id);
         return new ResponseEntity<>(userDto, HttpStatus.OK);
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Обновление пользователя", description = "Обновляет данные пользователя по его ID")
-    public ResponseEntity<UserDto> updateUser(@PathVariable @NotNull @Min(1) @Schema(description = "ID пользователя", example = "1") long id, @Valid @RequestBody UserCreationDto userCreationDto) {
+    public ResponseEntity<UserDto> updateUser(@PathVariable @NotNull @Min(1) @Schema(description = "ID пользователя", example = "1") Long id, @Valid @RequestBody UserCreationDto userCreationDto) {
         UserDto userDto = userService.updateUser(id, userCreationDto);
         return new ResponseEntity<>(userDto, HttpStatus.OK);
     }
@@ -51,7 +52,7 @@ public class UserController {
     @DeleteMapping("/{id}")
     @Operation(summary = "Удаление пользователя", description = "Удаляет пользователя по его ID")
     @ResponseStatus(HttpStatus.OK)
-    public void deleteUser(@PathVariable @NotNull @Min(1) @Schema(description = "ID пользователя", example = "1") long id) {
+    public void deleteUser(@PathVariable @NotNull @Min(1) @Schema(description = "ID пользователя", example = "1") Long id) {
         userService.deleteUser(id);
     }
 

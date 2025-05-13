@@ -11,7 +11,9 @@ import org.slf4j.MDC;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -86,25 +88,53 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    private List<ErrorResponse> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
-        return ex.getBindingResult().getFieldErrors().stream().map(error -> {
-            ErrorResponse response = new ErrorResponse();
-            response.setTraceId(MDC.get("traceId"));
-            response.setMessage("field: " + error.getField() + " " + error.getDefaultMessage());
-            return response;
-        }).collect(Collectors.toList());
+    public ResponseEntity<List<ErrorResponse>> handleMethodArgumentNotValid(
+            MethodArgumentNotValidException ex) {
+
+        List<ErrorResponse> errors = ex.getBindingResult().getFieldErrors().stream()
+                .map(error -> {
+                    ErrorResponse response = new ErrorResponse();
+                    response.setTraceId(MDC.get("traceId"));
+                    response.setMessage(String.format("Validation error in field '%s': %s",
+                            error.getField(),
+                            error.getDefaultMessage()));
+                    return response;
+                })
+                .collect(Collectors.toList());
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(errors);
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<List<ErrorResponse>> handleConstraintViolation(ConstraintViolationException ex) {
+        List<ErrorResponse> errors = ex.getConstraintViolations().stream()
+                .map(violation -> {
+                    ErrorResponse response = new ErrorResponse();
+                    response.setTraceId(MDC.get("traceId"));
+                    response.setMessage(String.format("Validation error in path '%s': %s",
+                            violation.getPropertyPath(),
+                            violation.getMessage()));
+                    return response;
+                })
+                .collect(Collectors.toList());
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(errors);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    private List<ErrorResponse> handleConstraintViolation(ConstraintViolationException ex) {
-        return ex.getConstraintViolations().stream().map(violation -> {
-            ErrorResponse response = new ErrorResponse();
-            response.setTraceId(MDC.get("traceId"));
-            response.setMessage("field: " + violation.getPropertyPath() + ": " + violation.getMessage());
-            return response;
-        }).collect(Collectors.toList());
+    private ResponseEntity<ErrorResponse> handleException(HttpMessageNotReadableException exception) {
+        ErrorResponse errorResponse = new ErrorResponse();
+        errorResponse.setTraceId(MDC.get("traceId"));
+        errorResponse.setMessage(exception.getMessage());
+        log.error("Request failed: traceId={}", MDC.get("traceId"), exception);
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
     @ResponseBody
