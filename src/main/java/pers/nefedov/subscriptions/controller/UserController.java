@@ -51,7 +51,7 @@ public class UserController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Удаление пользователя", description = "Удаляет пользователя по его ID")
-    @ResponseStatus(HttpStatus.OK)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteUser(@PathVariable @NotNull @Min(1) @Schema(description = "ID пользователя", example = "1") Long id) {
         userService.deleteUser(id);
     }
